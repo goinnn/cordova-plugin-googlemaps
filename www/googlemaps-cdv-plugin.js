@@ -370,12 +370,17 @@ if (!cordova) {
         // Stop timer when user does not touch the app and no changes are occurred during 1500ms.
         // (50ms * 5times + 200ms * 5times).
         // This save really the battery life significantly.
+
+        /* Disabled ecocheck. This block code did app no works right.
+        If app was paused 5-15 min when you click on it
+        the app did not respond in several seconds (20-80).
         if (idlingCnt < 10) {
           if (idlingCnt === 8) {
             cordova.fireDocumentEvent("ecocheck", {});
           }
           setTimeout(putHtmlElements, idlingCnt < 5 ? 50 : 200);
         }
+        */
         isChecking = false;
         return;
       }
