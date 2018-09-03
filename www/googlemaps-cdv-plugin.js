@@ -677,7 +677,7 @@ if (!cordova) {
           if (!window.plugin.google.maps) { console.warn('re-init window.plugin.google.maps'); window.plugin.google.maps = window.plugin.google.maps || module.exports; }
 
           // Check the Google Maps Android API v2 if the device platform is Android.
-          if (/Android/i.test(window.navigator.userAgent)) {
+          if (/Android/i.test(window.navigator.userAgent) && !document.URL.startsWith("http")) {
               //------------------------------------------------------------------------
               // If Google Maps Android API v2 is not available,
               // display the warning alert.
