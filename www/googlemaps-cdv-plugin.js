@@ -124,7 +124,10 @@ if (!cordova) {
     var cacheDepth = {};
     document.head.appendChild(navDecorBlocker);
     var doNotTraceTags = [
-      "svg", "p", "pre", "script", "style"
+      "svg", "p", "pre", "script", "style", "ion-footer", "ion-footer"
+    ];
+    var doNotTraceClasses = [
+        "no-trace-googlemaps"
     ];
 
     var followPositionTimer = null;
@@ -324,6 +327,13 @@ if (!cordova) {
               doNotTrace = true;
             }
           } else {
+            doNotTrace = true;
+          }
+          var classNames = (element.className || "").split(" ");
+          var matches = classNames.filter(function(clsName) {
+            return doNotTraceClasses.indexOf(clsName) !== -1;
+          });
+          if (matches && matches.length > 0) {
             doNotTrace = true;
           }
         }

@@ -225,7 +225,7 @@ function getDivRect(div) {
 var ignoreTags = [
   "pre", "textarea", "p", "form", "input", "caption", "canvas", "svg"
 ];
-var ignoreClasses = ["nav-decor"];
+var ignoreClasses = ["nav-decor", "no-trace-googlemaps"];
 
 function shouldWatchByNative(node) {
   if (node.nodeType !== Node.ELEMENT_NODE || !node.parentNode) {
