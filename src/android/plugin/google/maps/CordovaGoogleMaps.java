@@ -531,25 +531,18 @@ public class CordovaGoogleMaps extends CordovaPlugin implements ViewTreeObserver
           case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
             // Location settings are not satisfied. But could be fixed by showing the user
             // a dialog.
-            try {
-              //Keep the callback id
-              Bundle bundle = new Bundle();
-              bundle.putInt("type", ACTIVITY_LOCATION_DIALOG);
-              bundle.putString("callbackId", callbackContext.getCallbackId());
-              bundle.putBoolean("enableHighAccuracy", enableHighAccuracy);
-              int hashCode = bundle.hashCode();
+            //Keep the callback id
+            Bundle bundle = new Bundle();
+            bundle.putInt("type", ACTIVITY_LOCATION_DIALOG);
+            bundle.putString("callbackId", callbackContext.getCallbackId());
+            bundle.putBoolean("enableHighAccuracy", enableHighAccuracy);
 
-              bufferForLocationDialog.put("bundle_" + hashCode, bundle);
-              CordovaGoogleMaps.this.sendNoResult(callbackContext);
+            CordovaGoogleMaps.this.sendNoResult(callbackContext);
 
-              // Show the dialog by calling startResolutionForResult(),
-              // and check the result in onActivityResult().
-              cordova.setActivityResultCallback(CordovaGoogleMaps.this);
-              status.startResolutionForResult(cordova.getActivity(), hashCode);
-            } catch (SendIntentException e) {
-              // Show the dialog that is original version of this plugin.
-              _showLocationSettingsPage(enableHighAccuracy, callbackContext);
-            }
+            cordova.setActivityResultCallback(CordovaGoogleMaps.this);
+            // Emulate force user cancel location dialog.
+            // Same action than line 822, method onActivityResult
+            _userRefusedToUseLocationAfterActivityResult(bundle);
             break;
 
           case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
