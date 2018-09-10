@@ -124,7 +124,7 @@ if (!cordova) {
     var cacheDepth = {};
     document.head.appendChild(navDecorBlocker);
     var doNotTraceTags = [
-      "svg", "p", "pre", "script", "style", "ion-footer", "ion-footer"
+      "svg", "p", "pre", "script", "style",
     ];
     var doNotTraceClasses = [
         "no-trace-googlemaps"
