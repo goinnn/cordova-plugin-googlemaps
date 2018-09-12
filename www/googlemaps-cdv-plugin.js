@@ -120,7 +120,7 @@ if (!cordova) {
     var longIdlingCnt = -1;
 
     var isChecking = false;
-    var pauseResizeTimer = false;
+    var pauseResizeTimer = true;
     var cacheDepth = {};
     document.head.appendChild(navDecorBlocker);
     var doNotTraceTags = [
@@ -490,8 +490,10 @@ if (!cordova) {
       longIdlingCnt = -1;
       cacheDepth = {};
       cacheZIndex = {};
-      pauseResizeTimer = false;
-      cordova_exec(null, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
+      if (pauseResizeTimer) {
+        pauseResizeTimer = false;
+        cordova_exec(null, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
+      }
       putHtmlElements();
     }
 
