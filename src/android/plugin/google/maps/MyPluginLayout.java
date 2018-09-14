@@ -80,7 +80,10 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
         synchronized (timerLock) {
           isWaiting = true;
           try {
-            timerLock.wait();
+            // Wait for an user touch in HTML element with a timeout of 1 minute
+            // If the user doesn't touch a HTML element run only one time the task
+            // And wait another time
+            timerLock.wait(60000);
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
