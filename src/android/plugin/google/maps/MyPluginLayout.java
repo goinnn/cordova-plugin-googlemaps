@@ -57,6 +57,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
   private float zoomScale;
   public final Object timerLock = new Object();
   public boolean isWaiting = false;
+  public boolean isRunning = false;
 
   public Timer redrawTimer;
 
@@ -76,22 +77,22 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
   private class ResizeTask extends TimerTask {
     @Override
     public void run() {
+      if (isRunning) {
+          return;
+      }
       if (isSuspended || pauseResize) {
         synchronized (timerLock) {
           isWaiting = true;
           try {
-            // Wait for an user touch in HTML element with a timeout of 1 minute
-            // If the user doesn't touch a HTML element run only one time the task
-            // And wait another time
-            timerLock.wait(60000);
+            timerLock.wait();
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
         }
-        // Comment it for the same reason that previous comment.
-        //return;
+        return;
       }
       isWaiting = false;
+      isRunning = true;
       //final PluginMap pluginMap = pluginMaps.get(mapId);
       //if (pluginMap.mapDivId == null) {
       //  return;
@@ -134,6 +135,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
               AbsoluteLayout.LayoutParams params = (AbsoluteLayout.LayoutParams) lParams;
               if (params.x == x && params.y == y &&
                 params.width == width && params.height == height) {
+                isRunning = false;
                 return;
               }
               params.width = width;
@@ -146,6 +148,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
 
               if (params.leftMargin == x && params.topMargin == y &&
                 params.width == width && params.height == height) {
+                isRunning = false;
                 return;
               }
               params.width = width;
@@ -158,6 +161,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
 
               if (params.leftMargin == x && params.topMargin == y &&
                 params.width == width && params.height == height) {
+                isRunning = false;
                 return;
               }
               params.width = width;
@@ -175,6 +179,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
           mapId = null;
           pluginMap = null;
           drawRect = null;
+          isRunning = false;
         }
       });
 
@@ -241,7 +246,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
     scrollView.setVerticalScrollBarEnabled(false);
 
     redrawTimer = new Timer();
-    redrawTimer.scheduleAtFixedRate(new ResizeTask(), 100, 25);
+    redrawTimer.scheduleAtFixedRate(new ResizeTask(), 100, 500);
     mActivity.getWindow().getDecorView().requestFocus();
   }
 
