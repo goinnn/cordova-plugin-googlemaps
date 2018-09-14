@@ -314,7 +314,7 @@ public class CordovaGoogleMaps extends CordovaPlugin implements ViewTreeObserver
   }
 
   public void resumeResizeTimer(final JSONArray args, final CallbackContext callbackContext) throws JSONException {
-    if (mPluginLayout.isWaiting) {
+    if (mPluginLayout.pauseResize) {
       mPluginLayout.pauseResize = false;
       synchronized (mPluginLayout.timerLock) {
         mPluginLayout.timerLock.notify();
@@ -349,7 +349,7 @@ public class CordovaGoogleMaps extends CordovaPlugin implements ViewTreeObserver
     }
 
     mPluginLayout.pauseResize = true;
-    if (mPluginLayout.isWaiting) {
+    if (mPluginLayout.pauseResize) {
       mPluginLayout.pauseResize = false;
       synchronized (mPluginLayout.timerLock) {
         mPluginLayout.timerLock.notify();
