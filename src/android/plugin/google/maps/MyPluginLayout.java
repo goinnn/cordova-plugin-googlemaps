@@ -77,19 +77,21 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
   private class ResizeTask extends TimerTask {
     @Override
     public void run() {
-      if (isRunning) {
-          return;
-      }
-      if (isSuspended || pauseResize) {
+      if (isSuspended || pauseResize || isRunning) {
         synchronized (timerLock) {
           isWaiting = true;
           try {
-            timerLock.wait();
+            if (isSuspended || pauseResize) {
+              timerLock.wait();
+              return;
+            } else {
+              timerLock.wait(250);
+            }
           } catch (InterruptedException e) {
             e.printStackTrace();
+            return;
           }
         }
-        return;
       }
       isWaiting = false;
       isRunning = true;
