@@ -40,6 +40,7 @@ if (!cordova) {
   var INTERVAL_TIMER = null;
   var MAPS = {};
   var saltHash = Math.floor(Math.random() * Date.now());
+  var indexTouch = 0;
 
   /*****************************************************************************
    * To prevent strange things happen,
@@ -389,8 +390,6 @@ if (!cordova) {
         isChecking = false;
         return;
       }
-      idlingCnt = 0;
-      longIdlingCnt = 0;
 
       // If the map div is not displayed (such as display='none'),
       // ignore the map temporally.
@@ -429,54 +428,64 @@ if (!cordova) {
       //-----------------------------------------------------------------
       // Ignore the elements that their z-index is smaller than map div
       //-----------------------------------------------------------------
-      var finalDomPositions;
-      if (visibleMapList.length === 0) {
-        finalDomPositions = domPositions;
-      } else {
-        var quickfilter = function(list, head, tail) {
-          var i = head, j = tail;
-          var leftRight = true;
-          while(i < j) {
-            if (leftRight) {
-              if (domPositions[list[j]].depth < minMapDepth) {
-                list[i] = list[j];
-                i++;
-                leftRight = false;
+        var finalDomPositions;
+        if (visibleMapList.length === 0) {
+          finalDomPositions = domPositions;
+        } else {
+          var quickfilter = function(list, head, tail) {
+            var i = head, j = tail;
+            var leftRight = true;
+            while(i < j) {
+              if (leftRight) {
+                if (domPositions[list[j]].depth < minMapDepth) {
+                  list[i] = list[j];
+                  i++;
+                  leftRight = false;
+                } else {
+                  j--;
+                }
               } else {
-                j--;
-              }
-            } else {
-              if (domPositions[list[i]].depth >= minMapDepth) {
-                list[j] = list[i];
-                j--;
-                leftRight = true;
-              } else {
-                i++;
+                if (domPositions[list[i]].depth >= minMapDepth) {
+                  list[j] = list[i];
+                  j--;
+                  leftRight = true;
+                } else {
+                  i++;
+                }
               }
             }
-          }
-          list.splice(0, j);
-        };
-        var list = Object.keys(domPositions);
-        quickfilter(list, 0, list.length - 1);
-        finalDomPositions = {};
-        list.forEach(function(domId) {
-          finalDomPositions[domId] = domPositions[domId];
-        });
-      }
+            list.splice(0, j);
+          };
+          var list = Object.keys(domPositions);
+          quickfilter(list, 0, list.length - 1);
+          finalDomPositions = {};
+          list.forEach(function(domId) {
+            finalDomPositions[domId] = domPositions[domId];
+          });
+        }
       //-----------------------------------------------------------------
       // Pass information to native
       //-----------------------------------------------------------------
-      cordova_exec(function() {
+
+      if (Object.keys(domPositions).length === Object.keys(prevDomPositions).length) {
+        //console.log("putHtmlElements: De verdad");
+        cordova_exec(function() {
+          idlingCnt = 0;
+          longIdlingCnt = 0;
+          prevDomPositions = domPositions;
+          mapIDs.forEach(function(mapId) {
+              if (mapId in MAPS) {
+                  MAPS[mapId].refreshLayout();
+              }
+          });
+          setTimeout(putHtmlElements, 500);
+          isChecking = false;
+        }, null, 'CordovaGoogleMaps', 'putHtmlElements', [finalDomPositions]);
+      } else {
         prevDomPositions = domPositions;
-        mapIDs.forEach(function(mapId) {
-            if (mapId in MAPS) {
-                MAPS[mapId].refreshLayout();
-            }
-        });
-        setTimeout(putHtmlElements, 50);
         isChecking = false;
-      }, null, 'CordovaGoogleMaps', 'putHtmlElements', [finalDomPositions]);
+        setTimeout(putHtmlElements, 200);
+      }
       child = null;
       parentNode = null;
       elemId = null;
@@ -492,9 +501,10 @@ if (!cordova) {
       cacheZIndex = {};
       if (pauseResizeTimer) {
         pauseResizeTimer = false;
-        cordova_exec(null, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
+        cordova_exec(function () {
+          putHtmlElements();
+        }, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
       }
-      putHtmlElements();
     }
 
     var intervalTimer = null;
@@ -520,6 +530,7 @@ if (!cordova) {
               cordova_exec(null, null, 'CordovaGoogleMaps', 'pauseResizeTimer', []);
             }
             intervalTimer = null;
+
           }
         }
       }, 1000);
@@ -534,8 +545,15 @@ if (!cordova) {
     document.addEventListener("deviceready", putHtmlElements, {
       once: true
     });
-    document.addEventListener("plugin_touch", resetTimer);
-    window.addEventListener("orientationchange", resetTimer);
+    document.addEventListener("plugin_touch", function () {
+      if (indexTouch % 2 === 0) {
+        resetTimer();
+      }
+      indexTouch++;
+    });
+    window.addEventListener("orientationchange", function () {
+      resetTimer();
+    });
 
     //----------------------------------------------------
     // Stop all executions if the page will be closed.
