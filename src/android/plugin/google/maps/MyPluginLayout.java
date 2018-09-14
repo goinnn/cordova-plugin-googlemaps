@@ -88,7 +88,8 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
             e.printStackTrace();
           }
         }
-        return;
+        // Comment it for the same reason that previous comment.
+        //return;
       }
       isWaiting = false;
       //final PluginMap pluginMap = pluginMaps.get(mapId);
