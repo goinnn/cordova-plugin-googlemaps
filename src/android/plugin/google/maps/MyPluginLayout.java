@@ -32,9 +32,13 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
+
+
 @SuppressWarnings("deprecation")
 public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnScrollChangedListener, ViewTreeObserver.OnGlobalLayoutListener {
   private static final String TAG = "MyPluginLayout";
+  private static final long TASK_PERIOD_MILIS = 500;
   private CordovaWebView webView;
   private View browserView;
   private ViewGroup root;
@@ -57,6 +61,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
   private float zoomScale;
   public final Object timerLock = new Object();
   public boolean isWaiting = false;
+  private boolean withLastTime = true;
 
   public Timer redrawTimer;
 
@@ -80,17 +85,27 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
         synchronized (timerLock) {
           isWaiting = true;
           try {
-            // Wait for an user touch in HTML element with a timeout of 1 minute
-            // If the user doesn't touch a HTML element run only one time the task
-            // And wait another time
-            timerLock.wait(60000);
+            if (withLastTime) {
+              timerLock.wait(TASK_PERIOD_MILIS * 10);
+              withLastTime = false;
+            } else {
+              timerLock.wait();
+            }
           } catch (InterruptedException e) {
             e.printStackTrace();
           }
         }
-        // Comment it for the same reason that previous comment.
-        //return;
+      } else {
+        synchronized (timerLock) {
+          isWaiting = true;
+          try {
+            timerLock.wait(TASK_PERIOD_MILIS);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
       }
+
       isWaiting = false;
       //final PluginMap pluginMap = pluginMaps.get(mapId);
       //if (pluginMap.mapDivId == null) {
@@ -177,7 +192,6 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
           drawRect = null;
         }
       });
-
     }
   };
 
@@ -241,7 +255,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
     scrollView.setVerticalScrollBarEnabled(false);
 
     redrawTimer = new Timer();
-    redrawTimer.scheduleAtFixedRate(new ResizeTask(), 100, 25);
+    redrawTimer.scheduleAtFixedRate(new ResizeTask(), 100, TASK_PERIOD_MILIS);
     mActivity.getWindow().getDecorView().requestFocus();
   }
 
