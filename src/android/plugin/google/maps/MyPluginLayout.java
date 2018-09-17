@@ -32,9 +32,13 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
+
+
 @SuppressWarnings("deprecation")
 public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnScrollChangedListener, ViewTreeObserver.OnGlobalLayoutListener {
   private static final String TAG = "MyPluginLayout";
+  private static final long TASK_PERIOD_MILIS = 500;
   private CordovaWebView webView;
   private View browserView;
   private ViewGroup root;
@@ -57,7 +61,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
   private float zoomScale;
   public final Object timerLock = new Object();
   public boolean isWaiting = false;
-  public boolean isRunning = false;
+  private boolean withLastTime = true;
 
   public Timer redrawTimer;
 
@@ -77,24 +81,32 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
   private class ResizeTask extends TimerTask {
     @Override
     public void run() {
-      if (isSuspended || pauseResize || isRunning) {
+      if (isSuspended || pauseResize) {
         synchronized (timerLock) {
           isWaiting = true;
           try {
-            if (isSuspended || pauseResize) {
-              timerLock.wait();
-              return;
+            if (withLastTime) {
+              timerLock.wait(TASK_PERIOD_MILIS * 10);
+              withLastTime = false;
             } else {
-              timerLock.wait(250);
+              timerLock.wait();
             }
           } catch (InterruptedException e) {
             e.printStackTrace();
-            return;
+          }
+        }
+      } else {
+        synchronized (timerLock) {
+          isWaiting = true;
+          try {
+            timerLock.wait(TASK_PERIOD_MILIS);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
           }
         }
       }
+
       isWaiting = false;
-      isRunning = true;
       //final PluginMap pluginMap = pluginMaps.get(mapId);
       //if (pluginMap.mapDivId == null) {
       //  return;
@@ -137,7 +149,6 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
               AbsoluteLayout.LayoutParams params = (AbsoluteLayout.LayoutParams) lParams;
               if (params.x == x && params.y == y &&
                 params.width == width && params.height == height) {
-                isRunning = false;
                 return;
               }
               params.width = width;
@@ -150,7 +161,6 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
 
               if (params.leftMargin == x && params.topMargin == y &&
                 params.width == width && params.height == height) {
-                isRunning = false;
                 return;
               }
               params.width = width;
@@ -163,7 +173,6 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
 
               if (params.leftMargin == x && params.topMargin == y &&
                 params.width == width && params.height == height) {
-                isRunning = false;
                 return;
               }
               params.width = width;
@@ -181,10 +190,8 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
           mapId = null;
           pluginMap = null;
           drawRect = null;
-          isRunning = false;
         }
       });
-
     }
   };
 
@@ -248,7 +255,7 @@ public class MyPluginLayout extends FrameLayout implements ViewTreeObserver.OnSc
     scrollView.setVerticalScrollBarEnabled(false);
 
     redrawTimer = new Timer();
-    redrawTimer.scheduleAtFixedRate(new ResizeTask(), 100, 500);
+    redrawTimer.scheduleAtFixedRate(new ResizeTask(), 100, TASK_PERIOD_MILIS);
     mActivity.getWindow().getDecorView().requestFocus();
   }
 
