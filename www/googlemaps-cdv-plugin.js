@@ -487,6 +487,9 @@ if (!cordova) {
     // This is the special event that is fired by the google maps plugin
     // (Not generic plugin)
     function resetTimer() {
+      if (document.getElementsByTagName("ion-picker-cmp").length > 0) {
+        return;
+      }
       if (pauseResizeTimer) {
         idlingCnt = -1;
         longIdlingCnt = -1;
