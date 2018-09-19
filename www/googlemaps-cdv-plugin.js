@@ -120,7 +120,8 @@ if (!cordova) {
     var longIdlingCnt = -1;
 
     var isChecking = false;
-    var pauseResizeTimer = false;
+    var pauseResizeTimer = true;
+    var blockPauseResize = null;
     var cacheDepth = {};
     document.head.appendChild(navDecorBlocker);
     var doNotTraceTags = [
@@ -486,16 +487,24 @@ if (!cordova) {
     // This is the special event that is fired by the google maps plugin
     // (Not generic plugin)
     function resetTimer() {
-      if (document.getElementsByTagName("ion-picker-cmp").length > 0) {
-        return;
+      if (pauseResizeTimer) {
+        idlingCnt = -1;
+        longIdlingCnt = -1;
+        cacheDepth = {};
+        cacheZIndex = {};
+        blockPauseResize = null;
+        pauseResizeTimer = false;
+        cordova_exec(null, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
+        putHtmlElements();
+      } else if (blockPauseResize === null) {
+        blockPauseResize = Math.floor(Math.random() * Date.now());
+        setTimeout(()=> {
+          if (!pauseResizeTimer && blockPauseResize) {
+            pauseResizeTimer = true;
+            cordova_exec(null, null, 'CordovaGoogleMaps', 'pauseResizeTimer', []);
+          }
+        }, 10000);
       }
-      idlingCnt = -1;
-      longIdlingCnt = -1;
-      cacheDepth = {};
-      cacheZIndex = {};
-      pauseResizeTimer = false;
-      cordova_exec(null, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
-      putHtmlElements();
     }
 
     var intervalTimer = null;
@@ -529,7 +538,7 @@ if (!cordova) {
     // You have to fire to putHtmlElementsCheck event:
     // cordova.fireDocumentEvent("putHtmlElementsCheck", {});
     document.addEventListener("putHtmlElementsCheck", function() {
-        putHtmlElements();
+        resetTimer();
     });
 
     document.addEventListener("deviceready", putHtmlElements, {
