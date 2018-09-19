@@ -122,6 +122,7 @@ if (!cordova) {
 
     var isChecking = false;
     var pauseResizeTimer = true;
+    var blockPauseResize = null;
     var cacheDepth = {};
     document.head.appendChild(navDecorBlocker);
     var doNotTraceTags = [
@@ -498,15 +499,23 @@ if (!cordova) {
       if (document.getElementsByTagName("ion-picker-cmp").length > 0) {
         return;
       }
-      idlingCnt = -1;
-      longIdlingCnt = -1;
-      cacheDepth = {};
-      cacheZIndex = {};
       if (pauseResizeTimer) {
+        idlingCnt = -1;
+        longIdlingCnt = -1;
+        cacheDepth = {};
+        cacheZIndex = {};
+        blockPauseResize = null;
         pauseResizeTimer = false;
-        cordova_exec(function () {
-          putHtmlElements();
-        }, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
+        cordova_exec(null, null, 'CordovaGoogleMaps', 'resumeResizeTimer', []);
+        putHtmlElements();
+      } else if (blockPauseResize === null) {
+        blockPauseResize = Math.floor(Math.random() * Date.now());
+        setTimeout(()=> {
+          if (!pauseResizeTimer && blockPauseResize) {
+            pauseResizeTimer = true;
+            cordova_exec(null, null, 'CordovaGoogleMaps', 'pauseResizeTimer', []);
+          }
+        }, 10000);
       }
     }
 
@@ -542,7 +551,7 @@ if (!cordova) {
     // You have to fire to putHtmlElementsCheck event:
     // cordova.fireDocumentEvent("putHtmlElementsCheck", {});
     document.addEventListener("putHtmlElementsCheck", function() {
-        putHtmlElements();
+        resetTimer();
     });
 
     document.addEventListener("deviceready", putHtmlElements, {
