@@ -548,9 +548,9 @@ if (!cordova) {
       }, 1000);
     });
     // If you put an HTML on the map, after 10 seconds from init map
-    // You have to fire to putHtmlElementsCheck event:
-    // cordova.fireDocumentEvent("putHtmlElementsCheck", {});
-    document.addEventListener("putHtmlElementsCheck", function() {
+    // You have to fire to htmlElementsCheck event:
+    // cordova.fireDocumentEvent("htmlElementsCheck", {});
+    document.addEventListener("htmlElementsCheck", function() {
         resetTimer();
     });
 
