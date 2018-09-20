@@ -510,7 +510,7 @@ if (!cordova) {
         putHtmlElements();
       } else if (blockPauseResize === null) {
         blockPauseResize = Math.floor(Math.random() * Date.now());
-        setTimeout(()=> {
+        setTimeout(function () {
           if (!pauseResizeTimer && blockPauseResize) {
             pauseResizeTimer = true;
             cordova_exec(null, null, 'CordovaGoogleMaps', 'pauseResizeTimer', []);
