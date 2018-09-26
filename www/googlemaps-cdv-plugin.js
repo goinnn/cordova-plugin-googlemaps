@@ -490,7 +490,7 @@ if (!cordova) {
       if (document.getElementsByTagName("ion-picker-cmp").length > 0) {
         return;
       }
-      if (pauseResizeTimer) {
+      if (pauseResizeTimer || isSuspended) {
         idlingCnt = -1;
         longIdlingCnt = -1;
         cacheDepth = {};
